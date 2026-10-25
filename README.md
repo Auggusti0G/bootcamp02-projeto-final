@@ -7,7 +7,7 @@ Aplicação web para pesquisar Pokémon na PokeAPI e montar uma equipe de favori
 | Nome | Matrícula | Usuário GitHub | Funcionalidade (código) | PR principal |
 | --- | --- | --- | --- | --- |
 | Rafael Augusto Santana Gil | 22508717 | [@Auggusti0G](https://github.com/Auggusti0G) | Testes automatizados (Jest) + GitHub Actions + Docker Hub | (a preencher) |
-| NOME DO PARCEIRO | MATRÍCULA | @USUARIO-DO-PARCEIRO | Persistência real no Supabase (criar, listar e excluir favoritos) | (a preencher) |
+| Maria Júlia de Carvalho Costa | 22408994 | [@majuccostaa](https://github.com/majuccostaa) | Persistência real no Supabase (criar, listar e excluir favoritos) | (a preencher) |
 
 ## Padrão de nomes de branch
 
