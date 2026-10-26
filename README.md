@@ -239,6 +239,6 @@ O log do GitHub Actions mostra o motivo da falha: `Expected: "bulbasaur"`, `Rece
 
 ## 📌 Considerações Finais
 
-O **Pokédex Explorer & Team Builder — Projeto Final** evoluiu a aplicação das Etapas 01 e 02 para um fluxo de trabalho em equipe: cada funcionalidade nasceu em uma branch própria, passou por Pull Request revisada por um colega e só entrou na `main` com os testes aprovados pelo GitHub Actions.
+O **Pokédex Explorer & Team Builder — Projeto Final** evoluiu a aplicação das Etapas 01 e 02 para um fluxo de trabalho em equipe: cada funcionalidade nasceu em uma branch própria, passou por Pull Request revisada por um colega e só entrou na `main` com os testes aprovados pelo GitHub Actions e para achar os prints das evidencias basta ir na pasta de evidencias que tem um pdf com tudo de evidencias e todos os prints explicados.
 
 A aplicação consome a PokeAPI, salva os favoritos em PostgreSQL (Supabase) com criar, listar e excluir, e está publicada no Docker Hub, pronta para rodar com um único comando.
