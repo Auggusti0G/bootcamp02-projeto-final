@@ -53,6 +53,18 @@ async function obterHabilidadeTraduzida(urlHabilidade) {
 }
 
 async function buscarPokemon(termo) {
+  // Validação (utils.js): bloqueia entrada vazia ou com caracteres inválidos antes de chamar a API
+  if (!validarEntrada(termo)) {
+    areaResultado.innerHTML = `
+      <div class="error-card">
+        <div class="error-icon">⚠️</div>
+        <h3>Entrada inválida!</h3>
+        <p>Use apenas letras, números ou hífen (ex: pikachu, 25, mr-mime).</p>
+      </div>
+    `;
+    return;
+  }
+
   // Exibe o estado visual de carregamento (Spinner)
   areaResultado.innerHTML = `
     <div class="loading-state">
@@ -74,11 +86,11 @@ async function buscarPokemon(termo) {
 
     // Extração das informações básicas
     const nome = dados.name;
-    const id = String(dados.id).padStart(3, '0');
+    const id = formatarId(dados.id);
     const imagem = dados.sprites.other['official-artwork'].front_default || dados.sprites.front_default;
     const tipos = dados.types.map(t => `<span class="type-badge">${t.type.name}</span>`).join('');
-    const altura = (dados.height / 10).toFixed(1);
-    const peso = (dados.weight / 10).toFixed(1);
+    const altura = converterAltura(dados.height);
+    const peso = converterPeso(dados.weight);
 
     // Tradução da habilidade
     let habilidadeNome = 'N/A';
@@ -97,7 +109,7 @@ async function buscarPokemon(termo) {
         <button id="btn-star" class="btn-fav-card" title="Favoritar">${jaEhFavorito ? "⭐" : "☆"}</button>
         <span class="pokemon-id">#${id}</span>
         <img src="${imagem}" alt="${nome}" class="pokemon-img">
-        <h2 class="pokemon-name">${nome}</h2>
+        <h2 class="pokemon-name">${formatarNome(nome)}</h2>
         <div class="types-container">${tipos}</div>
         <div class="stats-grid">
           <div class="stat-item">
@@ -182,14 +194,12 @@ window.removerFavorito = function(id) {
 // Disparar busca manual ao clicar no ícone de busca
 botaoBuscar.addEventListener("click", () => {
   const termo = campoBusca.value;
-  if (termo) {
-    buscarPokemon(termo);
-  }
+  buscarPokemon(termo);
 });
 
 // Disparar busca aleatória (Sorteia um ID de 1 a 151 para garantia total de retorno válido na API)
 botaoAleatorio.addEventListener("click", () => {
-  const idAleatorio = Math.floor(Math.random() * 151) + 1;
+  const idAleatorio = sortearId(151);
   buscarPokemon(idAleatorio);
 });
 
