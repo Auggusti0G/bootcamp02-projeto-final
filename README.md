@@ -14,7 +14,7 @@ Aplicação web colaborativa que consulta Pokémon em tempo real pela **PokeAPI*
 | 🐳 Imagem no Docker Hub | https://hub.docker.com/r/rafaelaugusto01/bootcamp02-projeto-final |
 | 🔀 Pull Requests do time | https://github.com/Auggusti0G/bootcamp02-projeto-final/pulls?q=is%3Apr |
 | ⚙️ Execuções do CI (Actions) | https://github.com/Auggusti0G/bootcamp02-projeto-final/actions |
-| 📦 Projeto de origem (Etapa 02) | https://github.com/Auggusti0G/bootcamp_02 |
+| 📦 Projeto Github Pages | https://auggusti0g.github.io/bootcamp02-projeto-final/ |
 
 ---
 
