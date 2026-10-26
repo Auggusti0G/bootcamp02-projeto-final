@@ -1,3 +1,10 @@
 .git
+.github
 .gitignore
-README.md++
+node_modules
+package.json
+package-lock.json
+*.test.js
+docker-compose.yml
+evidencias
+README.md

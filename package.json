@@ -1,0 +1,12 @@
+{
+  "name": "pokedex-explorer",
+  "version": "1.0.0",
+  "description": "Pokédex Explorer & Team Builder — Bootcamp II Etapa 03",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
