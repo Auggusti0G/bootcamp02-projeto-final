@@ -52,6 +52,6 @@ describe("sortearId", () => {
 
 describe("teste de fogo", () => {
   test("formata o nome do Bulbasaur", () => {
-    expect(formatarNome("bulbasaur")).toBe("bulbasaur");
+    expect(formatarNome("bulbasaur")).toBe("Bulbasaur");
   });
 });
