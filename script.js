@@ -4,37 +4,94 @@ const botaoAleatorio = document.getElementById("botao-aleatorio");
 const botaoFavoritos = document.getElementById("botao-favoritos");
 const areaResultado = document.getElementById("resultado");
 
-// Gerenciamento de Favoritos no localStorage
-function obterFavoritos() {
-  return JSON.parse(localStorage.getItem("pokedex_favoritos")) || [];
+// =============================================================
+// Persistência real: tabela "favoritos" no Supabase (PostgreSQL)
+// SUPABASE_URL e SUPABASE_ANON_KEY vêm do config.js
+// =============================================================
+const clienteSupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Guarda na memória os números já favoritados, para pintar a estrela sem ir ao banco toda hora
+let numerosFavoritos = new Set();
+
+// LISTAR (SELECT): busca todos os favoritos, do mais antigo para o mais novo
+async function obterFavoritos() {
+  const { data, error } = await clienteSupabase
+    .from("favoritos")
+    .select("numero, nome, imagem")
+    .order("criado_em", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao listar favoritos:", error);
+    throw error;
+  }
+  numerosFavoritos = new Set(data.map(f => f.numero));
+  return data;
 }
 
-function salvarFavoritos(lista) {
-  localStorage.setItem("pokedex_favoritos", JSON.stringify(lista));
+// CRIAR (INSERT): salva um Pokémon nos favoritos
+async function adicionarFavorito(pokemon) {
+  const { error } = await clienteSupabase
+    .from("favoritos")
+    .insert({ numero: pokemon.numero, nome: pokemon.nome, imagem: pokemon.imagem });
+
+  if (error) {
+    // 23505 = violação da restrição UNIQUE da coluna "numero"
+    if (error.code === "23505") {
+      mostrarAviso("Este Pokémon já está nos seus favoritos!");
+      numerosFavoritos.add(pokemon.numero);
+      return;
+    }
+    throw error;
+  }
+  numerosFavoritos.add(pokemon.numero);
+  mostrarAviso(`${formatarNome(pokemon.nome)} foi adicionado aos favoritos!`);
 }
 
-function alternarFavorito(pokemon) {
-  let favoritos = obterFavoritos();
-  const index = favoritos.findIndex(f => f.id === pokemon.id);
+// EXCLUIR (DELETE): remove um Pokémon dos favoritos pelo número
+async function excluirFavorito(numero) {
+  const { error } = await clienteSupabase
+    .from("favoritos")
+    .delete()
+    .eq("numero", numero);
 
-  if (index >= 0) {
-    favoritos.splice(index, 1);
-  } else {
-    favoritos.push(pokemon);
+  if (error) throw error;
+  numerosFavoritos.delete(numero);
+}
+
+function eFavorito(numero) {
+  return numerosFavoritos.has(numero);
+}
+
+// Clique na estrela do card: favorita ou desfavorita
+async function alternarFavorito(pokemon) {
+  try {
+    if (eFavorito(pokemon.numero)) {
+      await excluirFavorito(pokemon.numero);
+      mostrarAviso(`${formatarNome(pokemon.nome)} saiu dos favoritos.`);
+    } else {
+      await adicionarFavorito(pokemon);
+    }
+  } catch (erro) {
+    console.error(erro);
+    mostrarAviso("Não foi possível falar com o banco de dados. Tente novamente.");
   }
 
-  salvarFavoritos(favoritos);
-  
-  // Se o Pokémon estiver na tela, atualiza o ícone do botão
   const btnStar = document.getElementById("btn-star");
   if (btnStar) {
-    btnStar.innerText = eFavorito(pokemon.id) ? "⭐" : "☆";
+    btnStar.innerText = eFavorito(pokemon.numero) ? "⭐" : "☆";
   }
 }
 
-function eFavorito(id) {
-  const favoritos = obterFavoritos();
-  return favoritos.some(f => f.id === id);
+// Mensagem temporária no canto da tela
+function mostrarAviso(mensagem) {
+  const aviso = document.createElement("div");
+  aviso.textContent = mensagem;
+  aviso.style.cssText =
+    "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);" +
+    "background:#1e293b;color:#f8fafc;padding:12px 20px;border-radius:10px;" +
+    "box-shadow:0 4px 12px rgba(0,0,0,.4);font-family:Poppins,sans-serif;z-index:1000;";
+  document.body.appendChild(aviso);
+  setTimeout(() => aviso.remove(), 3000);
 }
 
 // Função auxiliar para buscar a tradução da habilidade para PT-BR
@@ -100,8 +157,8 @@ async function buscarPokemon(termo) {
       habilidadeNome = traduzida || habObj.ability.name;
     }
 
-    const pokemonAtual = { id, nome, imagem };
-    const jaEhFavorito = eFavorito(id);
+    const pokemonAtual = { numero: dados.id, nome, imagem };
+    const jaEhFavorito = eFavorito(dados.id);
 
     // Renderização dos dados no DOM
     areaResultado.innerHTML = `
@@ -147,9 +204,28 @@ async function buscarPokemon(termo) {
   }
 }
 
-// Renderiza a lista de favoritos no container do resultado
-function exibirFavoritos() {
-  const favoritos = obterFavoritos();
+// Renderiza a lista de favoritos (vinda do Supabase) no container do resultado
+async function exibirFavoritos() {
+  areaResultado.innerHTML = `
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p style="color: #94a3b8; font-size: 0.9rem;">Carregando favoritos...</p>
+    </div>
+  `;
+
+  let favoritos;
+  try {
+    favoritos = await obterFavoritos();
+  } catch {
+    areaResultado.innerHTML = `
+      <div class="error-card">
+        <div class="error-icon">⚠️</div>
+        <h3>Erro ao carregar favoritos</h3>
+        <p>Não foi possível conectar ao banco de dados.</p>
+      </div>
+    `;
+    return;
+  }
 
   if (favoritos.length === 0) {
     areaResultado.innerHTML = `
@@ -163,13 +239,13 @@ function exibirFavoritos() {
     return;
   }
 
-  let itensHTML = favoritos.map(f => `
+  const itensHTML = favoritos.map(f => `
     <div class="item-favorito" onclick="buscarPokemon('${f.nome}')">
       <div class="item-favorito-info">
         <img src="${f.imagem}" alt="${f.nome}" class="item-favorito-img">
-        <span class="item-favorito-nome">${f.nome} (#${f.id})</span>
+        <span class="item-favorito-nome">${formatarNome(f.nome)} (#${formatarId(f.numero)})</span>
       </div>
-      <button class="btn-remover-fav" onclick="event.stopPropagation(); removerFavorito('${f.id}')" title="Remover">✕</button>
+      <button class="btn-remover-fav" onclick="event.stopPropagation(); removerFavorito(${f.numero})" title="Remover">✕</button>
     </div>
   `).join("");
 
@@ -183,11 +259,15 @@ function exibirFavoritos() {
   `;
 }
 
-// Função global para remover favoritos da lista
-window.removerFavorito = function(id) {
-  let favoritos = obterFavoritos();
-  favoritos = favoritos.filter(f => f.id !== id);
-  salvarFavoritos(favoritos);
+// Botão ✕ da lista: exclui no banco e redesenha a lista
+window.removerFavorito = async function (numero) {
+  try {
+    await excluirFavorito(numero);
+    mostrarAviso("Pokémon removido dos favoritos.");
+  } catch (erro) {
+    console.error(erro);
+    mostrarAviso("Não foi possível remover. Tente novamente.");
+  }
   exibirFavoritos();
 };
 
@@ -214,3 +294,6 @@ campoBusca.addEventListener("keypress", (e) => {
     botaoBuscar.click();
   }
 });
+
+// Ao abrir a página, carrega os números favoritados para as estrelas já aparecerem certas
+obterFavoritos().catch(() => {});
