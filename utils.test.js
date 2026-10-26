@@ -49,3 +49,9 @@ describe("sortearId", () => {
     expect(sortearId(151, () => 0.9999)).toBe(151);
   });
 });
+
+describe("teste de fogo", () => {
+  test("formata o nome do Bulbasaur", () => {
+    expect(formatarNome("bulbasaur")).toBe("bulbasaur");
+  });
+});
